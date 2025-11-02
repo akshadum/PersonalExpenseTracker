@@ -121,7 +121,4 @@ public class CalculationService {
         return calculationRepository.getRecurringExpenses();
     }
 
-    public void updateExpenseDone(Expense expense, LocalDate date) {
-        calculationRepository.save(expense);
-    }
 }

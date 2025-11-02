@@ -93,7 +93,7 @@ public class CalculationController {
             return ResponseEntity.status(HttpStatus.OK).body(myExpenses);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error while updating expense: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the expenses for id: " + id + " the error is: " + e.getMessage());
         }
     }
@@ -102,11 +102,14 @@ public class CalculationController {
     public ResponseEntity<?> getExpensesByCategory(@PathVariable Expense.ExpenseCategory category) {
         List<Expense> myExpenses = null;
         try {
+            logger.debug("Entered getExpensesByCategory");
             myExpenses = calculationService.getExpensesByCategory(category);
-            if (myExpenses.isEmpty())
+            if (myExpenses.isEmpty()) {
+                logger.warn("No Expense present for that category");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error while fetching expense: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the expenses filtered by category: " + category + " the error is: " + e.getMessage());
         }
         return ResponseEntity.status(HttpStatus.OK).body(myExpenses);
@@ -116,10 +119,14 @@ public class CalculationController {
     public ResponseEntity<?> getExpensesByDateRange(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         List<Expense> myExpenses = null;
         try {
+            logger.debug("Entered getExpensesByDateRange");
             myExpenses = calculationService.getExpensesByDateRange(startDate, endDate);
-            if (myExpenses.isEmpty())
+            if (myExpenses.isEmpty()) {
+                logger.warn("No Expense present for that Date Range");
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
         } catch (Exception e) {
+            logger.error("Error while fetching expense: {}", e.getMessage(), e);
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the expenses by date range shared between startDate: " + startDate + " endDate: " + endDate + " the error is: " + e.getMessage());
         }
