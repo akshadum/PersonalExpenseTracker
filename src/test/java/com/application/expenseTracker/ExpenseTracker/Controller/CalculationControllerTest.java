@@ -1,6 +1,10 @@
 package com.application.expenseTracker.ExpenseTracker.Controller;
 
 import com.application.expenseTracker.ExpenseTracker.Entity.Expense;
+import com.application.expenseTracker.ExpenseTracker.Exception.ExpenseNotFoundException;
+import com.application.expenseTracker.ExpenseTracker.Exception.GlobalExceptionHandler;
+import com.application.expenseTracker.ExpenseTracker.Exception.InvalidBudgetException;
+import com.application.expenseTracker.ExpenseTracker.Repository.CalculationRepository;
 import com.application.expenseTracker.ExpenseTracker.Service.CalculationService;
 import com.application.expenseTracker.ExpenseTracker.Service.EmailService;
 
@@ -34,6 +38,9 @@ public class CalculationControllerTest {
 
     @InjectMocks
     private CalculationController calculationController;
+
+    @Mock
+    private CalculationRepository calculationRepository;
 
     @Mock
     private SessionFactory sessionFactory;
@@ -422,17 +429,47 @@ public class CalculationControllerTest {
         verify(calculationService,times(0)).updateExpense(testExpense);
     }
 
+    @Test
     @DisplayName("🔁 Scheduled Task - Should create recurring entries successfully")
-    @Test
-    void testCreateRecurringEntries_WithExpenses() { }
+    void testCreateRecurringEntries_WithExpenses() {
+        when(calculationService.getRecurringExpenses()).thenReturn(Arrays.asList(testExpense));
+        doNothing().when(calculationService).addExpense(testExpense);
+        doNothing().when(calculationService).updateExpense(testExpense);
 
+        calculationController.createRecurringEntries();
+
+        verify(calculationService, times(1)).getRecurringExpenses();
+        verify(calculationService, times(1)).addExpense(testExpense);
+        verify(calculationService, times(1)).updateExpense(testExpense);
+    }
+
+    @Test
     @DisplayName("🚫 Scheduled Task - Should skip when no recurring expenses found")
-    @Test
-    void testCreateRecurringEntries_NoExpenses() {  }
+    void testCreateRecurringEntries_NoExpenses() {
+        when(calculationService.getRecurringExpenses()).thenReturn(Collections.emptyList());
+        doNothing().when(calculationService).addExpense(testExpense);
+        doNothing().when(calculationService).updateExpense(testExpense);
 
-    @DisplayName("💥 Scheduled Task - Should handle exception during recurring creation")
+        calculationController.createRecurringEntries();
+
+        verify(calculationService, times(1)).getRecurringExpenses();
+        verify(calculationService, times(0)).addExpense(testExpense);
+        verify(calculationService, times(0)).updateExpense(testExpense);
+    }
+
     @Test
-    void testCreateRecurringEntries_Exception() { }
+    @DisplayName("💥 Scheduled Task - Should handle exception during recurring creation")
+    void testCreateRecurringEntries_Exception() {
+        when(calculationService.getRecurringExpenses()).thenThrow(new RuntimeException());
+        doNothing().when(calculationService).addExpense(testExpense);
+        doNothing().when(calculationService).updateExpense(testExpense);
+
+        calculationController.createRecurringEntries();
+
+        verify(calculationService, times(1)).getRecurringExpenses();
+        verify(calculationService, times(0)).addExpense(testExpense);
+        verify(calculationService, times(0)).updateExpense(testExpense);
+    }
 
 }
 

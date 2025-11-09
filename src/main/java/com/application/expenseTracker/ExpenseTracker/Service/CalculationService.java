@@ -87,32 +87,36 @@ public class CalculationService {
     }
 
     public void checkAndSendBudgetAlerts(String userEmail ,int budget, LocalDate now){
-        String subject = "";
-        BigDecimal calculatedTotalExpense = calculationRepository.getTotalExpensesThisMonth(now);
-        int percentage = calculatedTotalExpense
-                .divide(BigDecimal.valueOf(budget), 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100))
-                .intValue();
+        try {String subject = "";
 
-        if(percentage >= 80 && percentage < 90) {
-            subject = "⚠️ Budget Alert: 80% reached!";
-        }else if(percentage >= 90 && percentage < 100) {
-            subject = "🚨  Budget Alert: 90% reached!";
-        }else if(percentage >= 100 && percentage < 120){
-            subject = "❗Budget Limit Reached!";
-        }else if(percentage >= 120){
-            subject = "🔥 Overspent! 120% of Budget Crossed!";
-        }
+            BigDecimal calculatedTotalExpense = calculationRepository.getTotalExpensesThisMonth(now);
+            int percentage = calculatedTotalExpense
+                    .divide(BigDecimal.valueOf(budget), 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .intValue();
 
-        if (!subject.isEmpty()) {
-            String body = String.format(
-                    "Hi User,%n%n" +
-                            "You have spent ₹%.2f out of your ₹%.2f budget (%.0f%%).%n" +
-                            "Please review your expenses.%n%n" +
-                            "— Expense Tracker Team",
-                    calculatedTotalExpense, budget, percentage);
+            if(percentage >= 80 && percentage < 90) {
+                subject = "⚠️ Budget Alert: 80% reached!";
+            }else if(percentage >= 90 && percentage < 100) {
+                subject = "🚨  Budget Alert: 90% reached!";
+            }else if(percentage >= 100 && percentage < 120){
+                subject = "❗Budget Limit Reached!";
+            }else if(percentage >= 120){
+                subject = "🔥 Overspent! 120% of Budget Crossed!";
+            }
 
-            emailService.sendBudgetAlert(userEmail, subject, body);
+            if (!subject.isEmpty()) {
+                String body = String.format(
+                        "Hi User,%n%n" +
+                                "You have spent ₹%.2f out of your ₹%.2f budget (%.0f%%).%n" +
+                                "Please review your expenses.%n%n" +
+                                "— Expense Tracker Team",
+                        calculatedTotalExpense, budget, percentage);
+
+                emailService.sendBudgetAlert(userEmail, subject, body);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
     }
